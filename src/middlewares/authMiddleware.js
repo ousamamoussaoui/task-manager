@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 import User from "../models/User.js";
+import { ErrorResponse } from "../utils/errorResponse.js";
 
 /**
  * @desc   Protect routes - only logged in users
@@ -18,13 +19,15 @@ export const protect = asyncHandler(async (req, res, next) => {
   }
 
   if (!token) {
-    res.status(401);
-    throw new Error("Not authorized, no token provided");
+    throw new ErrorResponse("Not authorized, no token provided", 401);
   }
-
+  
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id)
+    req.user = await User.findById(decoded.id);
+    if (!req.user) {
+      throw new ErrorResponse("User not found", 404);
+    }
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
@@ -41,8 +44,7 @@ export const isAdmin = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
     next();
   } else {
-    res.status(403);
-    throw new Error("Not authorized as admin");
+    throw new ErrorResponse("Not authorized as admin", 403);
   }
 };
 

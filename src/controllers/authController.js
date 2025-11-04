@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import User from "../models/User.js";
 import { generateToken } from "../utils/generateToken.js";
+import { ErrorResponse } from "../utils/errorResponse.js";
 
 /**
  * @desc    Register new user
@@ -9,6 +10,9 @@ import { generateToken } from "../utils/generateToken.js";
  */
 export const register = asyncHandler(async (req, res) => {
   const { username, email, password, role } = req.body;
+
+  if (!email || !password || !username)
+    throw new ErrorResponse("All fields are required", 400);
 
   const userExists = await User.findOne({ email });
   if (userExists)
@@ -20,9 +24,9 @@ export const register = asyncHandler(async (req, res) => {
 
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", 
+    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, 
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   res.status(201).json({
@@ -43,6 +47,9 @@ export const register = asyncHandler(async (req, res) => {
  */
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+
+  if (!email || !password)
+    throw new ErrorResponse("All fields are required", 400);
 
   const user = await User.findOne({ email }).select("+password");
   if (!user)
@@ -90,3 +97,5 @@ export const logout = asyncHandler(async (req, res) => {
     message: "Logged out successfully",
   });
 });
+
+

@@ -1,15 +1,15 @@
+import { ErrorResponse } from "../utils/errorResponse.js";
+
 const routeNotFound = (req, res, next) => {
-  const error = new Error(`Route not found - ${req.originalUrl}`);
+  const error = new  ErrorResponse(`Route not found - ${req.originalUrl}`, 404);
   res.status(404);
   next(error);
 };
 
 const errorHandler = (err, req, res, next) => {
-  // Use err.statusCode if provided, otherwise use current or 500
   let statusCode = err.statusCode || res.statusCode || 500;
   let message = err.message || "Internal Server Error";
 
-  // Handle specific error types
   if (err.name === "CastError" && err.kind === "ObjectId") {
     statusCode = 404;
     message = "Resource not found";
